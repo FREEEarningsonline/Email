@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Bulk Email Sender</title>
+  <title>Bulk Email Sender PRO</title>
 
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
@@ -30,12 +30,17 @@
       cursor: pointer;
       font-size: 16px;
     }
+
+    .stats {
+      margin-top: 20px;
+      font-size: 18px;
+    }
   </style>
 </head>
 
 <body>
 
-<h2>📧 Bulk Email Sender</h2>
+<h2>📧 Bulk Email Sender PRO</h2>
 
 <textarea id="emails" rows="5" placeholder="Enter emails (comma separated)"></textarea>
 
@@ -46,10 +51,18 @@
 
 <button onclick="sendEmails()">Send Emails</button>
 
+<div class="stats">
+  ✅ Sent: <span id="sent">0</span> |
+  ❌ Failed: <span id="failed">0</span>
+</div>
+
 <script>
   (function(){
-    emailjs.init("c1X32LxPHheBy0KJn"); // ✅ Public Key added
+    emailjs.init("c1X32LxPHheBy0KJn");
   })();
+
+  let sentCount = 0;
+  let failCount = 0;
 
   function sendEmails() {
 
@@ -58,25 +71,40 @@
     let title = document.getElementById("title").value;
     let message = document.getElementById("message").value;
 
-    emailList.forEach(function(email) {
+    sentCount = 0;
+    failCount = 0;
 
-      let params = {
-        title: title,
-        name: name,
-        message: message,
-        email: email.trim()
-      };
+    document.getElementById("sent").innerText = 0;
+    document.getElementById("failed").innerText = 0;
 
-      emailjs.send("service_wsg1p4u", "template_sygs8we", params)
-        .then(function(response) {
-          console.log("✅ Sent to:", email);
-        }, function(error) {
-          console.log("❌ Failed:", error);
-        });
+    emailList.forEach(function(email, index) {
+
+      setTimeout(function() {
+
+        let params = {
+          title: title,
+          name: name,
+          message: message,
+          email: email.trim()
+        };
+
+        emailjs.send("service_wsg1p4u", "template_sygs8we", params)
+          .then(function() {
+            sentCount++;
+            document.getElementById("sent").innerText = sentCount;
+            console.log("✅ Sent:", email);
+          })
+          .catch(function(error) {
+            failCount++;
+            document.getElementById("failed").innerText = failCount;
+            console.log("❌ Failed:", error);
+          });
+
+      }, index * 3000); // ⏱️ 3 sec delay
 
     });
 
-    alert("🚀 Emails sending started!");
+    alert("🚀 Sending started safely...");
   }
 </script>
 
