@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bulk Email Sender</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    textarea, input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    button {
+      padding: 15px;
+      background: #00ff99;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>📧 Bulk Email Sender</h2>
+
+<textarea id="emails" rows="5" placeholder="Enter emails (comma separated)"></textarea>
+
+<input type="text" id="name" placeholder="Your Name">
+<input type="text" id="title" placeholder="Email Subject">
+
+<textarea id="message" rows="5" placeholder="Message"></textarea>
+
+<button onclick="sendEmails()">Send Emails</button>
+
+<script>
+  (function(){
+    emailjs.init("c1X32LxPHheBy0KJn"); // ✅ Public Key added
+  })();
+
+  function sendEmails() {
+
+    let emailList = document.getElementById("emails").value.split(",");
+    let name = document.getElementById("name").value;
+    let title = document.getElementById("title").value;
+    let message = document.getElementById("message").value;
+
+    emailList.forEach(function(email) {
+
+      let params = {
+        title: title,
+        name: name,
+        message: message,
+        email: email.trim()
+      };
+
+      emailjs.send("service_wsg1p4u", "template_sygs8we", params)
+        .then(function(response) {
+          console.log("✅ Sent to:", email);
+        }, function(error) {
+          console.log("❌ Failed:", error);
+        });
+
+    });
+
+    alert("🚀 Emails sending started!");
+  }
+</script>
+
+</body>
+</html>
