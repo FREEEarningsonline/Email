@@ -1,110 +1,240 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Bulk Email Sender PRO</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Email Sender PRO + Cloud Save</title>
 
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  
+  <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  
+  <!-- Firebase SDK (Version 9 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
   <style>
+    :root {
+      --primary: #10b981; 
+      --primary-hover: #059669;
+      --accent: #3b82f6;
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+    }
+
     body {
-      font-family: Arial;
-      background: #111;
-      color: #fff;
-      text-align: center;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       padding: 20px;
     }
 
-    textarea, input {
-      width: 90%;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 8px;
-      border: none;
+    .container {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 600px;
+      padding: 35px;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
+    h2 { margin: 0; color: var(--primary); font-size: 24px; }
+    .subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 25px; }
+
+    .form-group { margin-bottom: 18px; text-align: left; }
+    label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    textarea, input {
+      width: 100%; padding: 14px; background: #0f172a; border: 1px solid #334155;
+      border-radius: 12px; color: white; font-size: 14px; box-sizing: border-box;
+      outline: none; transition: all 0.3s ease;
+    }
+
+    textarea:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+
     button {
-      padding: 15px;
-      background: #00ff99;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 16px;
+      padding: 15px; border: none; border-radius: 12px;
+      cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    .btn-update { background: #334155; color: white; border: 1px solid #475569; }
+    .btn-update:hover { background: #475569; }
+
+    .btn-send { background: var(--primary); color: white; }
+    .btn-send:hover { background: var(--primary-hover); transform: translateY(-2px); }
+
+    .status-bar {
+      margin-top: 20px; padding: 10px; border-radius: 8px; 
+      font-size: 13px; display: none; background: rgba(59, 130, 246, 0.1); color: var(--accent);
     }
 
     .stats {
-      margin-top: 20px;
-      font-size: 18px;
+      margin-top: 30px; display: flex; justify-content: space-around;
+      padding-top: 20px; border-top: 1px solid #334155;
     }
+
+    .stat-box span { display: block; font-size: 22px; font-weight: 700; }
+    .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .sent-count { color: var(--primary); }
+    .fail-count { color: var(--danger); }
   </style>
 </head>
 
 <body>
 
-<h2>📧 Bulk Email Sender PRO</h2>
+<div class="container">
+  <h2>📧 Bulk Mailer PRO</h2>
+  <div class="subtitle">Cloud Database Sync Active</div>
 
-<textarea id="emails" rows="5" placeholder="Enter emails (comma separated)"></textarea>
+  <div id="statusBar" class="status-bar"></div>
 
-<input type="text" id="name" placeholder="Your Name">
-<input type="text" id="title" placeholder="Email Subject">
+  <div class="form-group">
+    <label>Recipient Emails (Comma Separated)</label>
+    <textarea id="emails" rows="3" placeholder="user1@gmail.com, user2@gmail.com"></textarea>
+  </div>
 
-<textarea id="message" rows="5" placeholder="Message"></textarea>
+  <div style="display: flex; gap: 15px;">
+    <div class="form-group" style="flex: 1;">
+      <label>Your Name</label>
+      <input type="text" id="name" placeholder="Sender Name">
+    </div>
+    <div class="form-group" style="flex: 1;">
+      <label>Email Subject</label>
+      <input type="text" id="title" placeholder="Enter Subject">
+    </div>
+  </div>
 
-<button onclick="sendEmails()">Send Emails</button>
+  <div class="form-group">
+    <label>Message Body</label>
+    <textarea id="message" rows="5" placeholder="Write your message here..."></textarea>
+  </div>
 
-<div class="stats">
-  ✅ Sent: <span id="sent">0</span> |
-  ❌ Failed: <span id="failed">0</span>
+  <div class="actions">
+    <button class="btn-update" onclick="updateFirebase()">💾 Update & Save</button>
+    <button class="btn-send" onclick="sendEmails()">🚀 Start Sending</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-box">
+      <span id="sent" class="sent-count">0</span>
+      <div class="stat-label">SENT</div>
+    </div>
+    <div class="stat-box">
+      <span id="failed" class="fail-count">0</span>
+      <div class="stat-label">FAILED</div>
+    </div>
+  </div>
 </div>
 
 <script>
+  // 1. Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDR2OugzoVNnKN6OUKsPxC9ajldlhanteE",
+    authDomain: "tournament-af6dd.firebaseapp.com",
+    projectId: "tournament-af6dd",
+    storageBucket: "tournament-af6dd.firebasestorage.app",
+    messagingSenderId: "726964405659",
+    appId: "1:726964405659:web:d03f72c2d6f8721bc98d3e",
+    measurementId: "G-GK0JNQ44N7",
+    databaseURL: "https://tournament-af6dd-default-rtdb.firebaseio.com/"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // 2. EmailJS Init
   (function(){
     emailjs.init("c1X32LxPHheBy0KJn");
   })();
 
+  const statusBar = document.getElementById("statusBar");
+
+  function showStatus(msg, color = "#3b82f6") {
+    statusBar.style.display = "block";
+    statusBar.innerText = msg;
+    statusBar.style.color = color;
+    setTimeout(() => { statusBar.style.display = "none"; }, 4000);
+  }
+
+  // 3. Load Data from Firebase on Page Load
+  window.onload = function() {
+    showStatus("🔄 Connecting to Cloud...");
+    db.ref('mailSettings').once('value').then((snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        document.getElementById("emails").value = data.emails || "";
+        document.getElementById("name").value = data.name || "";
+        document.getElementById("title").value = data.title || "";
+        document.getElementById("message").value = data.message || "";
+        showStatus("✅ Cloud Data Restored", "#10b981");
+      }
+    }).catch(err => showStatus("❌ Error loading data", "#ef4444"));
+  };
+
+  // 4. Update/Save Function
+  function updateFirebase() {
+    const data = {
+      emails: document.getElementById("emails").value,
+      name: document.getElementById("name").value,
+      title: document.getElementById("title").value,
+      message: document.getElementById("message").value,
+      updatedAt: new Date().toLocaleString()
+    };
+
+    db.ref('mailSettings').set(data)
+      .then(() => showStatus("💾 Settings Saved Successfully!", "#10b981"))
+      .catch((err) => showStatus("❌ Failed to Save", "#ef4444"));
+  }
+
+  // 5. Send Email Logic
   let sentCount = 0;
   let failCount = 0;
 
   function sendEmails() {
-
-    let emailList = document.getElementById("emails").value.split(",");
+    let emailList = document.getElementById("emails").value.split(",").map(e => e.trim()).filter(e => e !== "");
     let name = document.getElementById("name").value;
     let title = document.getElementById("title").value;
     let message = document.getElementById("message").value;
 
+    if(emailList.length === 0) { alert("Please add emails first!"); return; }
+
     sentCount = 0;
     failCount = 0;
-
     document.getElementById("sent").innerText = 0;
     document.getElementById("failed").innerText = 0;
 
+    showStatus("🚀 Sending Process Started...", "#10b981");
+
     emailList.forEach(function(email, index) {
-
       setTimeout(function() {
-
-        let params = {
-          title: title,
-          name: name,
-          message: message,
-          email: email.trim()
-        };
+        let params = { title: title, name: name, message: message, email: email };
 
         emailjs.send("service_wsg1p4u", "template_sygs8we", params)
           .then(function() {
             sentCount++;
             document.getElementById("sent").innerText = sentCount;
-            console.log("✅ Sent:", email);
           })
           .catch(function(error) {
             failCount++;
             document.getElementById("failed").innerText = failCount;
-            console.log("❌ Failed:", error);
+            console.error(error);
           });
-
-      }, index * 3000); // ⏱️ 3 sec delay
-
+      }, index * 3000); // 3 Sec delay to avoid spam filters
     });
-
-    alert("🚀 Sending started safely...");
   }
 </script>
 
